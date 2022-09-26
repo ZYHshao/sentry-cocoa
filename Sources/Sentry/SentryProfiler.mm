@@ -175,6 +175,7 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
 
 + (void)stopProfilingSpan:(id<SentrySpan>)span
 {
+    SENTRY_LOG_DEBUG(@"stopProfilingWithSpan:");
 #    if SENTRY_TARGET_PROFILING_SUPPORTED
     std::lock_guard<std::mutex> l(_gProfilerLock);
 
@@ -211,6 +212,7 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
 
 + (void)linkTransaction:(SentryTransaction *)transaction
 {
+    SENTRY_LOG_DEBUG(@"linkTransaction:");
 #    if SENTRY_TARGET_PROFILING_SUPPORTED
     std::lock_guard<std::mutex> l(_gProfilerLock);
 
@@ -247,7 +249,7 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
         [profiler captureEnvelope];
         [profiler->_transactions removeAllObjects];
     } else {
-        SENTRY_LOG_DEBUG(@"Profiler %@ is waiting for more spans to complete.", profiler);
+        SENTRY_LOG_DEBUG(@"Profiler %@ is waiting for more spans to complete: %@.", profiler, profiler->_spansInFlight);
     }
 }
 
