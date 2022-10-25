@@ -249,7 +249,8 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
         [profiler captureEnvelope];
         [profiler->_transactions removeAllObjects];
     } else {
-        SENTRY_LOG_DEBUG(@"Profiler %@ is waiting for more spans to complete: %@.", profiler, profiler->_spansInFlight);
+        SENTRY_LOG_DEBUG(@"Profiler %@ is waiting for more spans to complete: %@.", profiler,
+            profiler->_spansInFlight);
     }
 }
 
