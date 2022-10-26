@@ -243,6 +243,7 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
 
 + (void)captureEnvelopeIfFinished:(SentryProfiler *)profiler spanID:(SentrySpanId *)spanID
 {
+    SENTRY_LOG_DEBUG(@"captureEnvelopeIfFinished:spanID:%@", spanID.sentrySpanIdString);
     [_gProfilersPerSpanID removeObjectForKey:spanID];
     [profiler->_spansInFlight removeObject:spanID];
     if (profiler->_spansInFlight.count == 0) {
@@ -289,6 +290,7 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
     _gCurrentProfiler->_frameInfo = SentryFramesTracker.sharedInstance.currentFrames;
     [SentryFramesTracker.sharedInstance resetProfilingTimestamps];
 #    endif // SENTRY_HAS_UIKIT
+    [_gCurrentProfiler captureEnvelope];
     _gCurrentProfiler = nil;
 }
 

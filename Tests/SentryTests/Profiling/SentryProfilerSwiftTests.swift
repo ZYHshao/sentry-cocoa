@@ -32,8 +32,12 @@ class SentryProfilerSwiftTests: XCTestCase {
         let operationClick = "ui.action.click"
         let action = "SomeAction:"
         let expectedAction = "SomeAction"
-        let dispatchQueue = TestSentryDispatchQueueWrapper()
-        lazy var eventTracker = SentryUIEventTracker(swizzleWrapper: swizzleWrapper, dispatchQueueWrapper: dispatchQueue, idleTimeout: 3.0)
+        lazy var dispatchQueue: TestSentryDispatchQueueWrapper = {
+            let dq = TestSentryDispatchQueueWrapper()
+            dq.dispatchAfterExecutesBlock = true
+            return dq
+        }()
+        lazy var eventTracker = SentryUIEventTracker(swizzleWrapper: swizzleWrapper, dispatchQueueWrapper: dispatchQueue, idleTimeout: 0.5)
 
         class TestUIEvent: UIEvent {}
     }
@@ -70,21 +74,28 @@ class SentryProfilerSwiftTests: XCTestCase {
         // based on SentryUIEventTrackerTests.test_SubclassOfUIButton_CreatesTransaction
         fixture.swizzleWrapper.execute(action: fixture.action, target: fixture.target, sender: fixture.button, event: Fixture.TestUIEvent())
 
-        waitForExpectations(timeout: 2)
+        waitForExpectations(timeout: 5)
 
-        guard let envelope = self.fixture.client.captureEnvelopeInvocations.first else {
-            XCTFail("Expected to capture 1 event")
-            return
-        }
-        XCTAssertEqual(1, envelope.items.count)
-        guard let profileItem = envelope.items.first else {
-            XCTFail("Expected an envelope item")
-            return
-        }
-        assertValidProfileData(data: profileItem.data)
+        let assertionExp = expectation(description: "performed assertions")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: .init(block: {
+            guard let envelope = self.fixture.client.captureEnvelopeInvocations.first else {
+                XCTFail("Expected to capture 1 event")
+                return
+            }
+            XCTAssertEqual(1, envelope.items.count)
+            guard let profileItem = envelope.items.first else {
+                XCTFail("Expected an envelope item")
+                return
+            }
+            self.assertValidProfileData(data: profileItem.data)
 
-        fixture.eventTracker.stop()
-        fixture.swizzleWrapper.removeAllCallbacks()
+            self.fixture.eventTracker.stop()
+            self.fixture.swizzleWrapper.removeAllCallbacks()
+
+            assertionExp.fulfill()
+        }))
+
+        waitForExpectations(timeout: 3)
     }
 
     func testConcurrentProfilingTransactions() {

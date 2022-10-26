@@ -24,7 +24,7 @@ class TestSentryDispatchQueueWrapper: SentryDispatchQueueWrapper {
     override func dispatch(after interval: TimeInterval, block: @escaping () -> Void) {
         dispatchAfterInvocations.record((interval, block))
         if dispatchAfterExecutesBlock {
-            block()
+            DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: .init(block: block))
         }
     }
     

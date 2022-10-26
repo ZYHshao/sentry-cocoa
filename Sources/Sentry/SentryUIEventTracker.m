@@ -127,12 +127,9 @@ SentryUIEventTracker ()
                                                           idleTimeout:self.idleTimeout
                                                  dispatchQueueWrapper:self.dispatchQueueWrapper];
 
-                [SentryLog
-                    logWithMessage:[NSString stringWithFormat:@"SentryUIEventTracker automatically "
-                                                              @"started a new transaction with "
-                                                              @"name: %@, bindToScope: %@",
-                                             transactionName, bindToScope ? @"YES" : @"NO"]
-                          andLevel:kSentryLevelDebug];
+                SENTRY_LOG_DEBUG(@"SentryUIEventTracker automatically started a new transaction "
+                                 @"with name: %@, bindToScope: %@",
+                    transactionName, bindToScope ? @"YES" : @"NO");
             }];
 
             if ([[sender class] isSubclassOfClass:[UIView class]]) {
