@@ -23,6 +23,19 @@ class SentryProfilerSwiftTests: XCTestCase {
         let message = "some message"
         let transactionName = "Some Transaction"
         let transactionOperation = "Some Operation"
+
+        // fixture properties to test that profiler works correctly with the UI event tracker
+        let swizzleWrapper = TestSentrySwizzleWrapper()
+        let target = FirstViewController()
+        let button = UIButton()
+        let operation = "ui.action"
+        let operationClick = "ui.action.click"
+        let action = "SomeAction:"
+        let expectedAction = "SomeAction"
+        let dispatchQueue = TestSentryDispatchQueueWrapper()
+        lazy var eventTracker = SentryUIEventTracker(swizzleWrapper: swizzleWrapper, dispatchQueueWrapper: dispatchQueue, idleTimeout: 3.0)
+
+        class TestUIEvent: UIEvent {}
     }
 
     private var fixture: Fixture!
@@ -41,6 +54,37 @@ class SentryProfilerSwiftTests: XCTestCase {
         SentryFramesTracker.sharedInstance().resetFrames()
         SentryFramesTracker.sharedInstance().stop()
 #endif
+    }
+
+    func testUIEventTrackerProfiling() {
+        fixture.options.profilesSampleRate = 1.0
+        fixture.options.tracesSampleRate = 1.0
+        fixture.eventTracker.start()
+        SentrySDK.setCurrentHub(fixture.hub)
+
+        let exp = expectation(description: "send action finishes")
+        fixture.swizzleWrapper.swizzleSendAction({ _, _, _, _ in
+            exp.fulfill()
+        }, forKey: "first")
+
+        // based on SentryUIEventTrackerTests.test_SubclassOfUIButton_CreatesTransaction
+        fixture.swizzleWrapper.execute(action: fixture.action, target: fixture.target, sender: fixture.button, event: Fixture.TestUIEvent())
+
+        waitForExpectations(timeout: 2)
+
+        guard let envelope = self.fixture.client.captureEnvelopeInvocations.first else {
+            XCTFail("Expected to capture 1 event")
+            return
+        }
+        XCTAssertEqual(1, envelope.items.count)
+        guard let profileItem = envelope.items.first else {
+            XCTFail("Expected an envelope item")
+            return
+        }
+        assertValidProfileData(data: profileItem.data)
+
+        fixture.eventTracker.stop()
+        fixture.swizzleWrapper.removeAllCallbacks()
     }
 
     func testConcurrentProfilingTransactions() {

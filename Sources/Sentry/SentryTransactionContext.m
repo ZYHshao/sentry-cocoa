@@ -86,7 +86,7 @@ NS_ASSUME_NONNULL_BEGIN
     _name = [NSString stringWithString:name];
     _nameSource = source;
     self.parentSampled = parentSampled;
-    SENTRY_LOG_DEBUG(@"Created trace context with name %@", name);
+    SENTRY_LOG_DEBUG(@"Created transaction context with name %@", name);
 }
 
 @end

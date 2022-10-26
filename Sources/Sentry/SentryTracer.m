@@ -278,6 +278,7 @@ static BOOL appStartMeasurementRead;
     if (finishedSpan == self.rootSpan) {
         SENTRY_LOG_DEBUG(@"Cannot call finish on root span with id %@",
             finishedSpan.context.spanId.sentrySpanIdString);
+        [SentryProfiler stopProfilingSpan:self.rootSpan];
         return;
     }
     [self canBeFinished];

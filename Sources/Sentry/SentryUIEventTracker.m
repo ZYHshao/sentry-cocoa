@@ -146,9 +146,15 @@ SentryUIEventTracker ()
             transaction.finishCallback = ^(SentryTracer *tracer) {
                 @synchronized(self.activeTransactions) {
                     [self.activeTransactions removeObject:tracer];
+                    SENTRY_LOG_DEBUG(
+                        @"Active transactions after removing tracer for span ID %@: %@",
+                        tracer.context.spanId.sentrySpanIdString, self.activeTransactions);
                 }
             };
             @synchronized(self.activeTransactions) {
+                SENTRY_LOG_DEBUG(
+                    @"Adding transaction %@ to list of active transactions (currently %@)",
+                    transaction.context.spanId.sentrySpanIdString, self.activeTransactions);
                 [self.activeTransactions addObject:transaction];
             }
         }
