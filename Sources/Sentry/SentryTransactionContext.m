@@ -1,4 +1,5 @@
 #import "SentryTransactionContext.h"
+#import "SentryLog.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -16,9 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
                    operation:(NSString *)operation
 {
     if (self = [super initWithOperation:operation]) {
-        _name = [NSString stringWithString:name];
-        _nameSource = source;
-        self.parentSampled = false;
+        [self commonInitWithName:name source:source parentSampled:NO];
     }
     return self;
 }
@@ -39,9 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
                      sampled:(SentrySampleDecision)sampled
 {
     if (self = [super initWithOperation:operation sampled:sampled]) {
-        _name = [NSString stringWithString:name];
-        _nameSource = source;
-        self.parentSampled = false;
+        [self commonInitWithName:name source:source parentSampled:NO];
     }
     return self;
 }
@@ -75,11 +72,21 @@ NS_ASSUME_NONNULL_BEGIN
                              parentId:parentSpanId
                             operation:operation
                               sampled:false]) {
-        _name = [NSString stringWithString:name];
-        _nameSource = source;
-        self.parentSampled = parentSampled;
+        [self commonInitWithName:name source:source parentSampled:parentSampled];
     }
     return self;
+}
+
+#pragma mark - Private
+
+- (void)commonInitWithName:(NSString *)name
+                    source:(SentryTransactionNameSource)source
+             parentSampled:(BOOL)parentSampled
+{
+    _name = [NSString stringWithString:name];
+    _nameSource = source;
+    self.parentSampled = parentSampled;
+    SENTRY_LOG_DEBUG(@"Created trace context with name %@", name);
 }
 
 @end

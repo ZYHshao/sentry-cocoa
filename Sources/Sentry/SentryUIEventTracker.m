@@ -97,11 +97,11 @@ SentryUIEventTracker ()
                 return;
             }
 
-            [currentActiveTransaction finish];
-
             if (currentActiveTransaction) {
-                SENTRY_LOG_DEBUG(@"SentryUIEventTracker finished transaction %@",
-                    currentActiveTransaction.transactionContext.name);
+                [currentActiveTransaction finish];
+                SENTRY_LOG_DEBUG(@"SentryUIEventTracker finished transaction %@ (span ID %@)",
+                    currentActiveTransaction.transactionContext.name,
+                    currentActiveTransaction.context.spanId.sentrySpanIdString);
             }
 
             NSString *operation = [self getOperation:sender];
