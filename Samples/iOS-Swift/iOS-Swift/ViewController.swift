@@ -70,6 +70,10 @@ class ViewController: UIViewController {
             self.breadcrumbLabel.text = "{ category: \(breadcrumb["category"] ?? "nil"), parentViewController: \(data["parentViewController"] ?? "nil"), beingPresented: \(data["beingPresented"] ?? "nil"), window_isKeyWindow: \(data["window_isKeyWindow"] ?? "nil"), is_window_rootViewController: \(data["is_window_rootViewController"] ?? "nil") }"
         }
     }
+
+    @IBAction func buttonClick(_ sender: Any) {
+        print("Clicked UIButton")
+    }
     
     @IBAction func addBreadcrumb(_ sender: Any) {
         let crumb = Breadcrumb(level: SentryLevel.info, category: "Debug")
