@@ -327,7 +327,7 @@ class SentryHubTests: XCTestCase {
     func testCaptureSampledTransaction_ReturnsEmptyId() {
         let transaction = sut.startTransaction(transactionContext: TransactionContext(name: fixture.transactionName, operation: fixture.transactionOperation, sampled: .no))
 
-        let trans = Dynamic(transaction).toTransaction().asAnyObject
+        let trans = Dynamic(transaction).createTransaction().asAnyObject
         let id = sut.capture(trans as! Transaction, with: Scope())
         id.assertIsEmpty()
     }
@@ -335,7 +335,7 @@ class SentryHubTests: XCTestCase {
     func testCaptureSampledTransaction_RecordsLostEvent() {
         let transaction = sut.startTransaction(transactionContext: TransactionContext(name: fixture.transactionName, operation: fixture.transactionOperation, sampled: .no))
 
-        let trans = Dynamic(transaction).toTransaction().asAnyObject
+        let trans = Dynamic(transaction).createTransaction().asAnyObject
         sut.capture(trans as! Transaction, with: Scope())
 
         XCTAssertEqual(1, fixture.client.recordLostEvents.count)

@@ -488,6 +488,11 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
 
 - (void)captureEnvelope
 {
+    if (_transactions.count == 0) {
+        SENTRY_LOG_DEBUG(@"No linked transactions, won't send profile.");
+        return;
+    }
+
     NSMutableDictionary<NSString *, id> *profile = nil;
     @synchronized(self) {
         profile = [_profile mutableCopy];
