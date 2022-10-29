@@ -24,6 +24,7 @@ class SentryProfilerSwiftTests: XCTestCase {
         var transactionName = "Some Transaction"
         let transactionOperation = "Some Operation"
 
+#if os(iOS) || os(tvOS) || targetEnvironment(macCatalyst)
         // fixture properties to test that profiler works correctly with the UI event tracker
         let swizzleWrapper = TestSentrySwizzleWrapper()
         let target = FirstViewController()
@@ -40,6 +41,7 @@ class SentryProfilerSwiftTests: XCTestCase {
         lazy var eventTracker = SentryUIEventTracker(swizzleWrapper: swizzleWrapper, dispatchQueueWrapper: dispatchQueue, idleTimeout: 0.5)
 
         class TestUIEvent: UIEvent {}
+#endif
     }
 
     private var fixture: Fixture!
@@ -60,6 +62,7 @@ class SentryProfilerSwiftTests: XCTestCase {
 #endif
     }
 
+#if os(iOS) || os(tvOS) || targetEnvironment(macCatalyst)
     func testUIEventTrackerProfiling() {
         fixture.options.profilesSampleRate = 1.0
         fixture.options.tracesSampleRate = 1.0
@@ -100,6 +103,7 @@ class SentryProfilerSwiftTests: XCTestCase {
 
         waitForExpectations(timeout: 3)
     }
+#endif
 
     func testConcurrentProfilingTransactions() {
         let options = fixture.options
