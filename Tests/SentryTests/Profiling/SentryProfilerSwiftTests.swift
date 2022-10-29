@@ -21,7 +21,7 @@ class SentryProfilerSwiftTests: XCTestCase {
         }()
         let scope = Scope()
         let message = "some message"
-        let transactionName = "Some Transaction"
+        var transactionName = "Some Transaction"
         let transactionOperation = "Some Operation"
 
         // fixture properties to test that profiler works correctly with the UI event tracker
@@ -87,6 +87,7 @@ class SentryProfilerSwiftTests: XCTestCase {
                 XCTFail("Expected an envelope item")
                 return
             }
+            self.fixture.transactionName = "SentryTests.FirstViewController.SomeAction"
             self.assertValidProfileData(data: profileItem.data)
 
             self.fixture.eventTracker.stop()
@@ -94,6 +95,8 @@ class SentryProfilerSwiftTests: XCTestCase {
 
             assertionExp.fulfill()
         }))
+
+        forceProfilerSample()
 
         waitForExpectations(timeout: 3)
     }
@@ -312,7 +315,11 @@ private extension SentryProfilerSwiftTests {
         XCTAssertFalse((os!["version"] as! String).isEmpty)
         XCTAssertFalse((os!["build_number"] as! String).isEmpty)
 
-        XCTAssertEqual("cocoa", profile["platform"] as! String)
+        if let platform = profile["platform"] as? String {
+            XCTAssertEqual("cocoa", platform)
+        } else {
+            XCTFail("Expected a platform")
+        }
 
         let version = Bundle.main.object(forInfoDictionaryKey: kCFBundleVersionKey as String) ?? "(null)"
         let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? "(null)"
@@ -337,15 +344,23 @@ private extension SentryProfilerSwiftTests {
         XCTAssertFalse(threadMetadata.values.compactMap { $0["priority"] }.filter { ($0 as! Int) > 0 }.isEmpty)
         XCTAssertFalse(threadMetadata.values.filter { $0["is_main_thread"] as? Bool == true }.isEmpty)
         XCTAssertFalse(queueMetadata.isEmpty)
-        XCTAssertFalse(((queueMetadata.first?.value as! [String: Any])["label"] as! String).isEmpty)
+        if let first = queueMetadata.first?.value as? [String: Any],
+           let label = first["label"] as? String {
+            XCTAssertFalse(label.isEmpty)
+        } else {
+            XCTFail("Expected a nonempty queue label")
+        }
 
         let samples = sampledProfile["samples"] as! [[String: Any]]
         XCTAssertFalse(samples.isEmpty)
 
         let frames = sampledProfile["frames"] as! [[String: Any]]
-        XCTAssertFalse(frames.isEmpty)
-        XCTAssertFalse((frames[0]["instruction_addr"] as! String).isEmpty)
-        XCTAssertFalse((frames[0]["function"] as! String).isEmpty)
+        if !frames.isEmpty {
+            XCTAssertFalse((frames[0]["instruction_addr"] as! String).isEmpty)
+            XCTAssertFalse((frames[0]["function"] as! String).isEmpty)
+        } else {
+            XCTFail("Expected frames in the profile")
+        }
 
         let stacks = sampledProfile["stacks"] as! [[Int]]
         var foundAtLeastOneNonEmptySample = false

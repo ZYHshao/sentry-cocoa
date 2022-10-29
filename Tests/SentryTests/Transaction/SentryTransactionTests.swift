@@ -9,7 +9,7 @@ class SentryTransactionTests: XCTestCase {
         let testValue = "extra_value"
         
         func getTransaction(trace: SentryTracer = SentryTracer(transactionContext: TransactionContext(operation: "operation"), hub: TestHub(client: nil, andScope: nil))) -> Transaction {
-            return Transaction(trace: trace, children: [])
+            return Transaction(trace: trace)
         }
         
         func getContext() -> TransactionContext {
@@ -33,7 +33,7 @@ class SentryTransactionTests: XCTestCase {
             
             let hub = TestHub(client: client, andScope: scope)
             let trace = SentryTracer(transactionContext: self.getContext(), hub: hub)
-            let transaction = Transaction(trace: trace, children: [])
+            let transaction = Transaction(trace: trace)
             return transaction
         }        
     }
@@ -102,7 +102,7 @@ class SentryTransactionTests: XCTestCase {
         let trace = fixture.getTrace()
         trace.setTag(value: fixture.testValue, key: fixture.testKey)
         
-        let sut = Transaction(trace: trace, children: [])
+        let sut = Transaction(trace: trace)
         
         // when
         let serializedTransaction = sut.serialize()
@@ -117,7 +117,7 @@ class SentryTransactionTests: XCTestCase {
         let context = TransactionContext(name: fixture.transactionName, operation: fixture.transactionOperation)
         context.setTag(value: fixture.testValue, key: fixture.testKey)
         let trace = SentryTracer(transactionContext: context, hub: fixture.getHub())
-        let sut = Transaction(trace: trace, children: [])
+        let sut = Transaction(trace: trace)
         
         // when
         let serializedTransaction = sut.serialize()
@@ -148,7 +148,7 @@ class SentryTransactionTests: XCTestCase {
         let trace = fixture.getTrace()
         trace.setData(value: fixture.testValue, key: fixture.testKey)
         
-        let sut = Transaction(trace: trace, children: [])
+        let sut = Transaction(trace: trace)
         
         // when
         let serializedTransaction = sut.serialize()

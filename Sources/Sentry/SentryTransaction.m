@@ -6,22 +6,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface
-SentryTransaction ()
-
-@property (nonatomic, strong) NSArray<id<SentrySpan>> *spans;
-
-@end
-
 @implementation SentryTransaction
 
-- (instancetype)initWithTrace:(SentryTracer *)trace children:(NSArray<id<SentrySpan>> *)children
+- (instancetype)initWithTrace:(SentryTracer *)trace
 {
     if (self = [super init]) {
         self.timestamp = trace.timestamp;
         self.startTimestamp = trace.startTimestamp;
         self.trace = trace;
-        self.spans = children;
         self.type = SentryEnvelopeItemTypeTransaction;
     }
     return self;

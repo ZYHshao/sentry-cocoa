@@ -50,7 +50,7 @@ class SentryClientTest: XCTestCase {
             options.dsn = SentryClientTest.dsn
             fileManager = try! SentryFileManager(options: options, andCurrentDateProvider: TestCurrentDateProvider())
             
-            transaction = Transaction(trace: trace, children: [])
+            transaction = Transaction(trace: trace)
             
             transport = TestTransport()
             transportAdapter = TestTransportAdapter(transport: transport, options: options)

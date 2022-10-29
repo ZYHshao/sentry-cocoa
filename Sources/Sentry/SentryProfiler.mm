@@ -266,6 +266,7 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
 
     SENTRY_LOG_DEBUG(@"Stopping profiler %@ due to timeout.", _gCurrentProfiler);
     [self stopProfilerForReason:SentryProfilerTruncationReasonTimeout];
+    [_gCurrentProfiler captureEnvelope];
 }
 
 + (void)backgroundAbort
@@ -279,6 +280,7 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
 
     SENTRY_LOG_DEBUG(@"Stopping profiler %@ due to timeout.", _gCurrentProfiler);
     [self stopProfilerForReason:SentryProfilerTruncationReasonAppMovedToBackground];
+    [_gCurrentProfiler captureEnvelope];
 }
 
 + (void)stopProfilerForReason:(SentryProfilerTruncationReason)reason
@@ -290,7 +292,6 @@ profilerTruncationReasonName(SentryProfilerTruncationReason reason)
     _gCurrentProfiler->_frameInfo = SentryFramesTracker.sharedInstance.currentFrames;
     [SentryFramesTracker.sharedInstance resetProfilingTimestamps];
 #    endif // SENTRY_HAS_UIKIT
-    [_gCurrentProfiler captureEnvelope];
     _gCurrentProfiler = nil;
 }
 

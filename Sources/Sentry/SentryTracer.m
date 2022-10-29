@@ -63,6 +63,7 @@ SentryTracer ()
     NSMutableDictionary<NSString *, SentryMeasurementValue *> *_measurements;
     dispatch_block_t _idleTimeoutBlock;
     NSMutableArray<id<SentrySpan>> *_children;
+    SentryTransaction *_transaction;
 
 #if SENTRY_HAS_UIKIT
     BOOL _startTimeChanged;
@@ -156,6 +157,7 @@ static BOOL appStartMeasurementRead;
         self.idleTimeout = idleTimeout;
         self.dispatchQueueWrapper = dispatchQueueWrapper;
         appStartMeasurement = [self getAppStartMeasurement];
+        _transaction = [self createTransaction];
 
         if ([self hasIdleTimeout]) {
             [self dispatchIdleTimeout];
@@ -278,7 +280,6 @@ static BOOL appStartMeasurementRead;
     if (finishedSpan == self.rootSpan) {
         SENTRY_LOG_DEBUG(@"Cannot call finish on root span with id %@",
             finishedSpan.context.spanId.sentrySpanIdString);
-        [SentryProfiler stopProfilingSpan:self.rootSpan];
         return;
     }
     [self canBeFinished];
@@ -483,6 +484,11 @@ static BOOL appStartMeasurementRead;
 
     @synchronized(_children) {
         if (self.idleTimeout > 0.0 && _children.count == 0) {
+            SENTRY_LOG_DEBUG(@"Was waiting for timeout for UI event trace with no children.");
+#if SENTRY_TARGET_PROFILING_SUPPORTED
+            [SentryProfiler stopProfilingSpan:self.rootSpan];
+            [SentryProfiler linkTransaction:_transaction];
+#endif // SENTRY_TARGET_PROFILING_SUPPORTED
             return;
         }
 
@@ -505,7 +511,7 @@ static BOOL appStartMeasurementRead;
     [SentryProfiler stopProfilingSpan:self.rootSpan];
 #endif // SENTRY_TARGET_PROFILING_SUPPORTED
 
-    SentryTransaction *transaction = [self toTransaction];
+    [self addMeasurementsAndChildrenToTransaction:_transaction];
 
     // Prewarming can execute code up to viewDidLoad of a UIViewController, and keep the app in the
     // background. This can lead to auto-generated transactions lasting for minutes or event hours.
@@ -517,15 +523,15 @@ static BOOL appStartMeasurementRead;
                         @"capturing transaction.",
             SENTRY_AUTO_TRANSACTION_MAX_DURATION);
 #if SENTRY_TARGET_PROFILING_SUPPORTED
-        [SentryProfiler dropTransaction:transaction];
+        [SentryProfiler dropTransaction:_transaction];
 #endif // SENTRY_TARGET_PROFILING_SUPPORTED
         return;
     }
 
-    [_hub captureTransaction:transaction withScope:_hub.scope];
+    [_hub captureTransaction:_transaction withScope:_hub.scope];
 
 #if SENTRY_TARGET_PROFILING_SUPPORTED
-    [SentryProfiler linkTransaction:transaction];
+    [SentryProfiler linkTransaction:_transaction];
 #endif // SENTRY_TARGET_PROFILING_SUPPORTED
 }
 
@@ -544,7 +550,14 @@ static BOOL appStartMeasurementRead;
     }
 }
 
-- (SentryTransaction *)toTransaction
+- (SentryTransaction *)createTransaction
+{
+    SentryTransaction *transaction = [[SentryTransaction alloc] initWithTrace:self];
+    transaction.transaction = self.transactionContext.name;
+    return transaction;
+}
+
+- (void)addMeasurementsAndChildrenToTransaction:(SentryTransaction *)transaction
 {
     NSArray<id<SentrySpan>> *appStartSpans = [self buildAppStartSpans];
 
@@ -553,15 +566,13 @@ static BOOL appStartMeasurementRead;
         [_children addObjectsFromArray:appStartSpans];
         spans = [_children copy];
     }
+    transaction.spans = spans;
 
     if (appStartMeasurement != nil) {
         [self setStartTimestamp:appStartMeasurement.appStartTimestamp];
     }
 
-    SentryTransaction *transaction = [[SentryTransaction alloc] initWithTrace:self children:spans];
-    transaction.transaction = self.transactionContext.name;
     [self addMeasurements:transaction];
-    return transaction;
 }
 
 - (nullable SentryAppStartMeasurement *)getAppStartMeasurement
