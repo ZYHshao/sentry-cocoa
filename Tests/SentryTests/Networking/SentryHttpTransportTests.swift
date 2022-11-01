@@ -28,7 +28,12 @@ class SentryHttpTransportTests: XCTestCase {
         let requestManager: TestRequestManager
         let requestBuilder = TestNSURLRequestBuilder()
         let rateLimits: DefaultRateLimits
-        let dispatchQueueWrapper = TestSentryDispatchQueueWrapper()
+        var dispatchQueueWrapper: TestSentryDispatchQueueWrapper = {
+            let dqw = TestSentryDispatchQueueWrapper()
+            dqw.dispatchAfterExecutesBlock = true
+            dqw.delayDispatches = false
+            return dqw
+        }()
         let reachability = TestSentryReachability()
         let flushTimeout: TimeInterval = 0.5
 

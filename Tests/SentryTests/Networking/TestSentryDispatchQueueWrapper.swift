@@ -4,6 +4,7 @@ class TestSentryDispatchQueueWrapper: SentryDispatchQueueWrapper {
     
     var dispatchAsyncCalled = 0
     var dispatchAfterExecutesBlock = false
+    var delayDispatches = true
     
     override func dispatchAsync(_ block: @escaping () -> Void) {
         dispatchAsyncCalled += 1
@@ -24,7 +25,11 @@ class TestSentryDispatchQueueWrapper: SentryDispatchQueueWrapper {
     override func dispatch(after interval: TimeInterval, block: @escaping () -> Void) {
         dispatchAfterInvocations.record((interval, block))
         if dispatchAfterExecutesBlock {
-            DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: .init(block: block))
+            if delayDispatches {
+                DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: .init(block: block))
+            } else {
+                block()
+            }
         }
     }
     
