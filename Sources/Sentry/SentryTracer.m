@@ -585,6 +585,8 @@ static BOOL appStartMeasurementRead;
     }
     transaction.spans = spans;
 
+    transaction.timestamp = self.timestamp;
+
     if (appStartMeasurement != nil) {
         [self setStartTimestamp:appStartMeasurement.appStartTimestamp];
     }

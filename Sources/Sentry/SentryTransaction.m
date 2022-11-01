@@ -11,7 +11,6 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithTrace:(SentryTracer *)trace
 {
     if (self = [super init]) {
-        self.timestamp = trace.timestamp;
         self.startTimestamp = trace.startTimestamp;
         self.trace = trace;
         self.type = SentryEnvelopeItemTypeTransaction;
